@@ -88,6 +88,9 @@ func (s *Server) listSlots(c *gin.Context) {
 		"service_id":       svc.ID,
 		"duration_minutes": svc.DurationMinutes,
 		"timezone":         s.sched.Loc.String(),
+		"open_hour":        s.sched.OpenHour,
+		"close_hour":       s.sched.CloseHour,
+		"slot_minutes":     s.sched.SlotMinutes,
 		"slots":            slots,
 	})
 }
