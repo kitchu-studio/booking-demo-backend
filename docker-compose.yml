@@ -41,6 +41,10 @@ services:
       PORT: "8080"
       DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}?sslmode=disable
       JWT_SECRET: ${JWT_SECRET}
+      BUSINESS_TZ: ${BUSINESS_TZ:-Asia/Bangkok}
+      OPEN_HOUR: ${OPEN_HOUR:-9}
+      CLOSE_HOUR: ${CLOSE_HOUR:-18}
+      SLOT_MINUTES: ${SLOT_MINUTES:-30}
 
   caddy:
     image: caddy:2-alpine

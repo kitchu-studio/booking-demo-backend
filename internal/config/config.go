@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"os"
+	"strconv"
 	"time"
 )
 
@@ -14,6 +15,12 @@ type Config struct {
 	JWTSecret   string
 	AccessTTL   time.Duration
 	RefreshTTL  time.Duration
+
+	// Booking schedule (shop opening hours).
+	BusinessTZ  string
+	OpenHour    int
+	CloseHour   int
+	SlotMinutes int
 }
 
 func Load() (*Config, error) {
@@ -24,6 +31,10 @@ func Load() (*Config, error) {
 		JWTSecret:   os.Getenv("JWT_SECRET"),
 		AccessTTL:   getDuration("ACCESS_TOKEN_TTL", 15*time.Minute),
 		RefreshTTL:  getDuration("REFRESH_TOKEN_TTL", 30*24*time.Hour),
+		BusinessTZ:  getenv("BUSINESS_TZ", "Asia/Bangkok"),
+		OpenHour:    getInt("OPEN_HOUR", 9),
+		CloseHour:   getInt("CLOSE_HOUR", 18),
+		SlotMinutes: getInt("SLOT_MINUTES", 30),
 	}
 
 	if cfg.DatabaseURL == "" {
@@ -52,4 +63,16 @@ func getDuration(key string, fallback time.Duration) time.Duration {
 		return fallback
 	}
 	return d
+}
+
+func getInt(key string, fallback int) int {
+	v := os.Getenv(key)
+	if v == "" {
+		return fallback
+	}
+	n, err := strconv.Atoi(v)
+	if err != nil {
+		return fallback
+	}
+	return n
 }

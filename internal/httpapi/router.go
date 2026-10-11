@@ -8,20 +8,22 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/kitchu-studio/booking-demo-backend/internal/auth"
+	"github.com/kitchu-studio/booking-demo-backend/internal/schedule"
 	"github.com/kitchu-studio/booking-demo-backend/internal/store"
 )
 
 type Server struct {
 	store  *store.Store
 	tokens *auth.TokenManager
+	sched  *schedule.Schedule
 }
 
-func NewRouter(st *store.Store, tokens *auth.TokenManager, appEnv string) *gin.Engine {
+func NewRouter(st *store.Store, tokens *auth.TokenManager, sched *schedule.Schedule, appEnv string) *gin.Engine {
 	if appEnv == "production" {
 		gin.SetMode(gin.ReleaseMode)
 	}
 
-	s := &Server{store: st, tokens: tokens}
+	s := &Server{store: st, tokens: tokens, sched: sched}
 
 	r := gin.New()
 	r.Use(gin.Recovery(), requestLogger())
@@ -35,9 +37,16 @@ func NewRouter(st *store.Store, tokens *auth.TokenManager, appEnv string) *gin.E
 		a.POST("/login", s.login)
 		a.POST("/refresh", s.refresh)
 
+		// Public: anyone can browse services and free times.
+		v1.GET("/services", s.listServices)
+		v1.GET("/services/:id/slots", s.listSlots)
+
 		authed := v1.Group("")
 		authed.Use(s.requireAuth())
 		authed.GET("/me", s.me)
+		authed.POST("/bookings", s.createBooking)
+		authed.GET("/bookings", s.listMyBookings)
+		authed.POST("/bookings/:id/cancel", s.cancelBooking)
 	}
 	return r
 }

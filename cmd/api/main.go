@@ -9,10 +9,12 @@ import (
 	"os/signal"
 	"syscall"
 	"time"
+	_ "time/tzdata" // embed timezone data: the distroless image has none
 
 	"github.com/kitchu-studio/booking-demo-backend/internal/auth"
 	"github.com/kitchu-studio/booking-demo-backend/internal/config"
 	"github.com/kitchu-studio/booking-demo-backend/internal/httpapi"
+	"github.com/kitchu-studio/booking-demo-backend/internal/schedule"
 	"github.com/kitchu-studio/booking-demo-backend/internal/store"
 )
 
@@ -36,8 +38,14 @@ func main() {
 	}
 	defer st.Close()
 
+	sched, err := schedule.New(cfg.BusinessTZ, cfg.OpenHour, cfg.CloseHour, cfg.SlotMinutes)
+	if err != nil {
+		logger.Error("invalid schedule config", "error", err)
+		os.Exit(1)
+	}
+
 	tokens := auth.NewTokenManager(cfg.JWTSecret, cfg.AccessTTL, cfg.RefreshTTL)
-	router := httpapi.NewRouter(st, tokens, cfg.AppEnv)
+	router := httpapi.NewRouter(st, tokens, sched, cfg.AppEnv)
 
 	srv := &http.Server{
 		Addr:              ":" + cfg.Port,
